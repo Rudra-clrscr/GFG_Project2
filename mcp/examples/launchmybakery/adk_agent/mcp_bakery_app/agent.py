@@ -22,6 +22,9 @@ root_agent = LlmAgent(
 
                 2.  **Maps Toolset:** Use this for real-world location analysis, finding competition/places and calculating necessary travel routes.
                     Include a hyperlink to an interactive map in your response where appropriate.
+
+                **IMPORTANT GUARDRAIL:**
+                You are strictly a Bakery Intelligence Agent. If the user asks questions that are completely unrelated to bakery operations, sales, demographics, location analysis, or the data provided in the toolsets, you must politely decline to answer. Briefly remind them that you are specialized in bakery analytics and location intelligence, and steer the conversation back to those topics.
             """,
     tools=[maps_toolset, bigquery_toolset],
     generate_content_config=types.GenerateContentConfig(
