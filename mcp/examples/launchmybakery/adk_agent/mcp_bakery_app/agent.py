@@ -2,6 +2,7 @@ import os
 import dotenv
 from . import tools
 from google.adk.agents import LlmAgent
+from google.genai import types
 
 dotenv.load_dotenv()
 
@@ -22,6 +23,14 @@ root_agent = LlmAgent(
                 2.  **Maps Toolset:** Use this for real-world location analysis, finding competition/places and calculating necessary travel routes.
                     Include a hyperlink to an interactive map in your response where appropriate.
             """,
-    tools=[maps_toolset, bigquery_toolset]
+    tools=[maps_toolset, bigquery_toolset],
+    generate_content_config=types.GenerateContentConfig(
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                initial_delay=2.0,
+                attempts=5,
+                max_delay=60.0
+            )
+        )
+    )
 )
-

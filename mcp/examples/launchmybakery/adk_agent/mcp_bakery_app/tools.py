@@ -27,26 +27,36 @@ def get_maps_mcp_toolset():
 
 
 def get_bigquery_mcp_toolset():   
-        
+    import httpx
+    from google.adk.tools.mcp_tool.mcp_session_manager import create_mcp_http_client
+
     credentials, project_id = google.auth.default(
             scopes=["https://www.googleapis.com/auth/bigquery"]
     )
 
-    credentials.refresh(google.auth.transport.requests.Request())
-    oauth_token = credentials.token
+    async def auth_hook(request):
+        if not credentials.valid:
+            import google.auth.transport.requests
+            credentials.refresh(google.auth.transport.requests.Request())
+        request.headers['Authorization'] = f"Bearer {credentials.token}"
         
-    HEADERS_WITH_OAUTH = {
-        "Authorization": f"Bearer {oauth_token}",
+    def custom_client_factory(*args, **kwargs):
+        client = create_mcp_http_client(*args, **kwargs)
+        client.event_hooks['request'].append(auth_hook)
+        return client
+
+    HEADERS_WITHOUT_OAUTH = {
         "x-goog-user-project": project_id
     }
 
     tools = MCPToolset(
         connection_params=StreamableHTTPConnectionParams(
             url=BIGQUERY_MCP_URL,
-            headers=HEADERS_WITH_OAUTH,
+            headers=HEADERS_WITHOUT_OAUTH,
             timeout=30.0,          
-            sse_read_timeout=300.0
+            sse_read_timeout=300.0,
+            httpx_client_factory=custom_client_factory
         )
     )
-    print("MCP Toolset configured for Streamable HTTP connection.")
+    print("MCP Toolset configured for Streamable HTTP connection with dynamic auth.")
     return tools
